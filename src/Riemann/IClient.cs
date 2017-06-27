@@ -48,7 +48,7 @@ namespace Riemann
         ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
         ///  <param name="tags">List of tags to associate with this event</param>
         ///  <param name="attributes">Optional arbitrary custom name/value content</param>
-        void SendEvent(string service, string state, string description, float metric,
+        Response SendEvent(string service, string state, string description, float metric,
             int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null);
 
         /// 
@@ -64,7 +64,7 @@ namespace Riemann
         /// <param name='ttl'>Number of seconds this event will be applicable for.</param>
         /// <param name="tags">List of tags to associate with this event</param>
         /// <param name="attributes">Optional arbitrary name/value string content</param>
-        void SendEvent(string host, string service, string state, string description, float metric, int ttl = 0,
+        Response SendEvent(string host, string service, string state, string description, float metric, int ttl = 0,
             List<string> tags = null, Dictionary<string, string> attributes = null);
 
         ///

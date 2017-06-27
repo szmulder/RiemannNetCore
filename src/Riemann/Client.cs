@@ -466,9 +466,9 @@ namespace Riemann
         /// <param name='ttl'>Number of seconds this event will be applicable for.</param>
         /// <param name="tags">List of tags to associate with this event</param>
         /// <param name="attributes">Optional arbitrary custom name/value content</param>
-        public void SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
+        public Response SendEvent(string service, string state, string description, float metric, int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
         {
-            SendEvent(null, service, state, description, metric, ttl, tags, attributes);
+            return SendEvent(null, service, state, description, metric, ttl, tags, attributes);
         }
 
 
@@ -484,11 +484,11 @@ namespace Riemann
         ///  <param name='ttl'>Number of seconds this event will be applicable for.</param>
         ///  <param name="tags">List of tags to associate with this event</param>
         /// <param name="attributes">Optional arbitrary custom name/value content</param>
-        public void SendEvent(string host, string service, string state, string description, float metric,
+        public Response SendEvent(string host, string service, string state, string description, float metric,
                               int ttl = 0, List<string> tags = null, Dictionary<string, string> attributes = null)
         {
             var ev = new Event(host, service, state, description, metric, ttl, tags, attributes);
-            SendEvents(new[] { ev });
+            return SendEvents(new[] { ev });
         }
 
         ///
