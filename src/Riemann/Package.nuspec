@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>riemann-netCore</id>
-    <version>1.0.4</version>
+    <version>1.0.6</version>
     <authors>BlueMountain Capital</authors>
     <owners>BlueMountain Capital</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
     <projectUrl>https://github.com/szmulder/RiemannNetCore</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A simple Riemann driver for C#</description>
-    <releaseNotes>Fix System.PlatformNotSupportedException: This platform does not support connecting sockets to DNS endpoints via the instance Connect and ConnectAsync methods, due to the potential for a host name to map to multiple IP addresses and sockets becoming invalid for use after a failed connect attempt. Use the static ConnectAsync method, or provide to the instance methods the specific IPAddress desired.</releaseNotes>
+    <releaseNotes>Add new constructor for Client, remove ConnectAsyc for UDP.</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>riemann .netcore</tags>
     <dependencies>

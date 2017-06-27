@@ -56,7 +56,7 @@ namespace Riemann
         }
 
         private readonly string _host;
-        private readonly IPAddress _hostIpAddress;
+        private readonly ClientInfo _clientInfo;
         private readonly ushort _port;
         private readonly string _name = GetFqdn();
         private readonly bool _throwExceptionsOnTicks;
@@ -82,14 +82,17 @@ namespace Riemann
             return string.Format("{0}.{1}", properties.HostName, properties.DomainName);
         }
 
-        public Client(IPAddress host)
+        public Client(ClientInfo clientInfo)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
             SuppressSendErrors = true;
-            _hostIpAddress = host;
-            _port = (ushort)5555;
-            _throwExceptionsOnTicks = true;
+            _clientInfo = clientInfo;
 
-            OpenUdpConnection();
+            _port = clientInfo.Port;
+            _throwExceptionsOnTicks = clientInfo.ThrowExceptionOnTicks;
+            _useTcp = clientInfo.UseTcp;
+
+            OpenConnection();
         }
 
         ///
@@ -101,15 +104,20 @@ namespace Riemann
         ///
         public Client(string host = "localhost", int port = 5555, bool throwExceptionOnTicks = true, bool useTcp = false)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
             SuppressSendErrors = true;
             _host = host;
             _port = (ushort)port;
             _throwExceptionsOnTicks = throwExceptionOnTicks;
             _useTcp = useTcp;
 
+            OpenConnection();
+        }
+
+        private void OpenConnection()
+        {
             if (_useTcp)
             {
-                _cancellationTokenSource = new CancellationTokenSource();
                 var token = _cancellationTokenSource.Token;
 
                 Task.Run(async () =>
@@ -136,7 +144,6 @@ namespace Riemann
                 OpenUdpConnection();
             }
         }
-
 
         ///
         /// <summary>Adds a tag to the current context (relative to this client). This call is not thread-safe.</summary>
@@ -279,7 +286,6 @@ namespace Riemann
 
         private void OpenTcpConnectionUnsafe()
         {
-
             if (ConnectionState != State.Disconnected)
             {
                 return;
@@ -288,7 +294,13 @@ namespace Riemann
             {
                 ConnectionState = State.Connecting;
                 _tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                _tcpSocket.Connect(_host, _port);
+
+                if(_clientInfo != null)
+                    _tcpSocket.Connect(_clientInfo.RiemannIpAddress, _port);
+                else
+                    _tcpSocket.Connect(_host, _port);
+
+
                 ConnectionState = State.Connected;
                 _tcpStream = new NetworkStream(_tcpSocket, true);
             }
@@ -305,16 +317,23 @@ namespace Riemann
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
             var ipAddress = default(IPAddress);
-            if (IPAddress.TryParse(_host, out ipAddress))
+            if (_clientInfo != null)
             {
-                socket.ConnectAsync(ipAddress, _port).Wait();
+                socket.Connect(_clientInfo.RiemannIpAddress, _port);
             }
             else
             {
-                var resolved = Dns.GetHostAddressesAsync(_host).Result;
-                if (resolved != null && resolved.Any())
+                if (IPAddress.TryParse(_host, out ipAddress))
                 {
-                    socket.ConnectAsync(resolved[0], _port).Wait();
+                    socket.Connect(ipAddress, _port);
+                }
+                else
+                {
+                    var resolved = Dns.GetHostAddressesAsync(_host).Result;
+                    if (resolved != null && resolved.Any())
+                    {
+                        socket.Connect(resolved[0], _port);
+                    }
                 }
             }
 
@@ -389,15 +408,18 @@ namespace Riemann
                     try
                     {
                         WriteMsgToStream(msg);
-                        var streamResponse = ReadReplyFromStream();
-                        response = new Response()
+                        if (!_clientInfo.SkipResponse)
                         {
-                            Ok = streamResponse.ok,
-                            Error = streamResponse.error,
-                            Query = streamResponse.query.@string
-                        };
+                            var streamResponse = ReadReplyFromStream();
+                            response = new Response()
+                            {
+                                Ok = streamResponse.ok,
+                                Error = streamResponse.error,
+                                Query = streamResponse.query.@string
+                            };
+                        }
                     }
-                    catch (IOException)
+                    catch (IOException ie)
                     {
                         if (!_tcpSocket.Connected)
                         {
