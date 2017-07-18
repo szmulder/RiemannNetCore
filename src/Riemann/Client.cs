@@ -118,26 +118,37 @@ namespace Riemann
         {
             if (_useTcp)
             {
-                var token = _cancellationTokenSource.Token;
-
-                Task.Run(async () =>
-                {
-                    while (!token.IsCancellationRequested)
+                //try
+                //{
+                    lock (this)
                     {
-                        try
+                        if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
                         {
-                            lock (this)
-                            {
-                                if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
-                                {
-                                    OpenTcpConnectionUnsafe();
-                                }
-                            }
+                            OpenTcpConnectionUnsafe();
                         }
-                        catch (Exception) { }
-                        await Task.Delay(5000);
                     }
-                }, token);
+                //}
+                //catch (Exception) { }
+                //var token = _cancellationTokenSource.Token;
+
+                //Task.Run(async () =>
+                //{
+                //    while (!token.IsCancellationRequested)
+                //    {
+                //        try
+                //        {
+                //            lock (this)
+                //            {
+                //                if (_tcpStream == null || _tcpSocket == null || !_tcpSocket.Connected)
+                //                {
+                //                    OpenTcpConnectionUnsafe();
+                //                }
+                //            }
+                //        }
+                //        catch (Exception) { }
+                //        await Task.Delay(5000);
+                //    }
+                //}, token);
             }
             else
             {
@@ -423,6 +434,7 @@ namespace Riemann
                     {
                         if (!_tcpSocket.Connected)
                         {
+                            response.Error = "IOException !_tcpSocket.Connected";
                             ConnectionState = State.Disconnected;
                             _tcpSocket = null;
                             _tcpStream = null;
@@ -436,6 +448,10 @@ namespace Riemann
                 else if (!SuppressSendErrors)
                 {
                     throw new IOException("Not connected");
+                }
+                else
+                {
+                    response.Error = "!_tcpSocket.Connected";
                 }
             }
 

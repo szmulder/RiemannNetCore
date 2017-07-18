@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>riemann-netCore</id>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
     <authors>BlueMountain Capital</authors>
     <owners>BlueMountain Capital</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
     <projectUrl>https://github.com/szmulder/RiemannNetCore</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A simple Riemann driver for C#</description>
-    <releaseNotes>Add new constructor for Client, remove ConnectAsyc for UDP.</releaseNotes>
+    <releaseNotes>Fix TCP not connection problem</releaseNotes>
     <copyright>Copyright 2017</copyright>
     <tags>riemann .netcore</tags>
     <dependencies>
